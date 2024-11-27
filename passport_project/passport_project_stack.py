@@ -65,5 +65,59 @@ class PassportProjectStack(Stack):
 
         # Define API Gateway resources and methods
         query_resource = api.root.add_resource("queries")
-        query_resource.add_method("GET", apigateway.LambdaIntegration(lambda_function))
-        query_resource.add_method("POST", apigateway.LambdaIntegration(lambda_function))
+
+        # Enable CORS for the resource
+        query_resource.add_method(
+            "GET", 
+            apigateway.LambdaIntegration(lambda_function),
+            method_responses=[
+                apigateway.MethodResponse(
+                    status_code="200",
+                    response_parameters={
+                        "method.response.header.Access-Control-Allow-Origin": True
+                    },
+                )
+            ]
+        )
+
+        query_resource.add_method(
+            "POST", 
+            apigateway.LambdaIntegration(lambda_function),
+            method_responses=[
+                apigateway.MethodResponse(
+                    status_code="200",
+                    response_parameters={
+                        "method.response.header.Access-Control-Allow-Origin": True
+                    },
+                )
+            ]
+        )
+
+        # Add CORS to the OPTIONS method for preflight requests
+        query_resource.add_method(
+            "OPTIONS",
+            apigateway.MockIntegration(
+                integration_responses=[
+                    apigateway.IntegrationResponse(
+                        status_code="200",
+                        response_parameters={
+                            "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                            "method.response.header.Access-Control-Allow-Origin": "'*'",
+                            "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,POST'"
+                        },
+                    )
+                ],
+                passthrough_behavior=apigateway.PassthroughBehavior.WHEN_NO_MATCH,
+                request_templates={"application/json": '{"statusCode": 200}'},
+            ),
+            method_responses=[
+                apigateway.MethodResponse(
+                    status_code="200",
+                    response_parameters={
+                        "method.response.header.Access-Control-Allow-Headers": True,
+                        "method.response.header.Access-Control-Allow-Origin": True,
+                        "method.response.header.Access-Control-Allow-Methods": True,
+                    },
+                )
+            ],
+        )
