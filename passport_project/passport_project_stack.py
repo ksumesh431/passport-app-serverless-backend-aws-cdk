@@ -5,7 +5,6 @@ from aws_cdk import (
     aws_lambda as lambda_,
     aws_dynamodb as dynamodb,
     RemovalPolicy,
-    CfnOutput,
 )
 from constructs import Construct
 
@@ -17,7 +16,7 @@ class PassportProjectStack(Stack):
 
         # The code that defines your stack goes here
 
-        # Create IAM role with permissions to access DynamoDB and CloudWatch
+        # IAM role with permissions to access DynamoDB and CloudWatch
         role = iam.Role(
             self,
             "LambdaExecutionRole",
@@ -32,7 +31,7 @@ class PassportProjectStack(Stack):
             ],
         )
 
-        # Create DynamoDB table
+        # DynamoDB table
         queries_table = dynamodb.Table(
             self,
             "QueriesTable",
@@ -44,7 +43,7 @@ class PassportProjectStack(Stack):
             removal_policy=RemovalPolicy.DESTROY,  # Use RETAIN for production
         )
 
-        # Create Lambda function
+        # Lambda function (code in lambda directory)
         lambda_function = lambda_.Function(
             self,
             "PassportBackendFunction",
@@ -60,7 +59,7 @@ class PassportProjectStack(Stack):
         # Grant the Lambda function permissions to write to the DynamoDB table
         queries_table.grant_write_data(lambda_function)
 
-        # Create API Gateway REST API
+        # API Gateway REST API
         api = apigateway.RestApi(self, "PassportServerlessAPI")
 
         # Define API Gateway resources and methods
